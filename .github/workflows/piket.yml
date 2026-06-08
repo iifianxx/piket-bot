@@ -1,0 +1,49 @@
+name: Piket Reminder
+
+on:
+  schedule:
+    - cron: '40 0 * * 1-5'   # 07:40 WIB → mode pagi   (UTC+7, jadi UTC 00:40)
+    - cron: '15 8 * * 1-5'   # 15:15 WIB → mode siang  (UTC+7, jadi UTC 08:15)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Mode pengiriman'
+        required: true
+        default: 'pagi'
+        type: choice
+        options: [pagi, siang]
+
+jobs:
+  send-reminder:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependensi
+        run: pip install requests
+
+      - name: Tentukan mode (scheduled)
+        if: github.event_name == 'schedule'
+        run: |
+          if [ "${{ github.event.schedule }}" = "40 0 * * 1-5" ]; then
+            echo "MODE=pagi" >> $GITHUB_ENV
+          else
+            echo "MODE=siang" >> $GITHUB_ENV
+          fi
+
+      - name: Tentukan mode (manual)
+        if: github.event_name == 'workflow_dispatch'
+        run: echo "MODE=${{ github.event.inputs.mode }}" >> $GITHUB_ENV
+
+      - name: Kirim reminder piket
+        run: python piket_bot.py $MODE
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID:   ${{ secrets.CHAT_ID }}
