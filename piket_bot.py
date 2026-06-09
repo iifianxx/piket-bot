@@ -90,7 +90,7 @@ def now() -> str:
 
 
 def kirim_pesan(teks: str):
-    url = f"https://api.telegram.org/bot8484920881:AAHWDpT1ezHuDHos8mt_ZYmIvkSPXML0MiA/sendMessage"
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {"chat_id": CHAT_ID, "text": teks, "parse_mode": "Markdown"}
     try:
         resp = requests.post(url, json=payload, timeout=10)
