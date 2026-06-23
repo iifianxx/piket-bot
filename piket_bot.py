@@ -1,14 +1,15 @@
 import os
-import sys
+import time
 from datetime import datetime
 import requests
+import schedule
 
 # ============================================================
 # KONFIGURASI
 # ============================================================
 
-BOT_TOKEN = os.environ["BOT_TOKEN"]
-CHAT_ID = os.environ["CHAT_ID"]
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+CHAT_ID = os.environ.get("CHAT_ID")
 
 TUGAS_PIKET = [
     "Menyapu lantai & membuang sampah",
@@ -38,7 +39,6 @@ HARI_ID = {
 # FORMAT PESAN
 # ============================================================
 
-
 def format_pagi(hari_id: str, petugas: list) -> str:
     """Pagi: identity anchor + implementation intention."""
     baris = []
@@ -61,7 +61,6 @@ def format_pagi(hari_id: str, petugas: list) -> str:
         f"_Mohon piket sebelum pelajaran dimulai. 🙏_"
     )
 
-
 def format_siang(hari_id: str, petugas: list) -> str:
     anggota  = petugas[:-1]
     DANPIKET = petugas[-1].upper()
@@ -81,17 +80,18 @@ def format_siang(hari_id: str, petugas: list) -> str:
         f"_Terima kasih atas kesadaran dan tanggung jawabnya. 🙏_"
     )
 
-
 # ============================================================
 # FUNGSI UTAMA
 # ============================================================
 
-
 def now() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-
 def kirim_pesan(teks: str):
+    if not BOT_TOKEN or not CHAT_ID:
+        print(f"[{now()}] ERROR: BOT_TOKEN atau CHAT_ID tidak ditemukan di environment.")
+        return
+
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {"chat_id": CHAT_ID, "text": teks, "parse_mode": "Markdown"}
     try:
@@ -100,12 +100,13 @@ def kirim_pesan(teks: str):
         if data.get("ok"):
             print(f"[{now()}] Pesan berhasil dikirim.")
         else:
-            print(f"[{now()}] ERROR: {data.get('description')}")
+            print(f"[{now()}] ERROR API: {data.get('description')}")
     except requests.exceptions.RequestException as e:
         print(f"[{now()}] Koneksi gagal: {e}")
 
-
 def kirim_reminder_piket(mode: str):
+    # Mengambil hari dari server (Railway menggunakan UTC)
+    # Karena 00:40 UTC dan 08:15 UTC tidak menyeberang hari dari WIB, harinya tetap akurat.
     hari_en = datetime.now().strftime("%A")
     hari_id = HARI_ID.get(hari_en, hari_en)
 
@@ -120,15 +121,40 @@ def kirim_reminder_piket(mode: str):
     else:
         pesan = format_pagi(hari_id, petugas)
 
+    print(f"[{now()}] Mengeksekusi mode {mode} untuk {hari_id}...")
     kirim_pesan(pesan)
 
+# Wrapper function untuk scheduler
+def job_pagi():
+    kirim_reminder_piket("pagi")
+
+def job_siang():
+    kirim_reminder_piket("siang")
 
 # ============================================================
-# ENTRY POINT
+# ENTRY POINT (DAEMON/ALWAYS-ON)
 # ============================================================
 
 if __name__ == "__main__":
-    # Ambil argumen: python piket_bot.py pagi  ATAU  python piket_bot.py siang
-    mode = sys.argv[1] if len(sys.argv) > 1 else "pagi"
-    print(f"[{now()}] Mode: {mode}")
-    kirim_reminder_piket(mode)
+    print(f"[{now()}] Sistem bot diinisialisasi (Mode Always-On).")
+    
+    # Jadwal Pagi: 07:40 WIB = 00:40 UTC
+    jadwal_pagi_utc = "00:40"
+    for hari in [schedule.every().monday, schedule.every().tuesday, 
+                 schedule.every().wednesday, schedule.every().thursday, 
+                 schedule.every().friday]:
+        hari.at(jadwal_pagi_utc).do(job_pagi)
+
+    # Jadwal Siang: 15:15 WIB = 08:15 UTC
+    jadwal_siang_utc = "08:15"
+    for hari in [schedule.every().monday, schedule.every().tuesday, 
+                 schedule.every().wednesday, schedule.every().thursday, 
+                 schedule.every().friday]:
+        hari.at(jadwal_siang_utc).do(job_siang)
+
+    print(f"[{now()}] Jadwal diaktifkan. Pagi: {jadwal_pagi_utc} UTC, Siang: {jadwal_siang_utc} UTC.")
+    
+    # Looping abadi agar container tidak mati
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
