@@ -68,8 +68,7 @@ function buatPesanPagi(hari, namaPiket) {
   const hariIndonesia = NAMA_HARI[hari];
 
   return [
-    "🪭<b>DANPIKET</b>",
-    "🧹 <b>REMINDER PIKET KELAS</b>",
+      "🧹 <b>REMINDER PIKET KELAS</b>",
     "━━━━━━━━━━━━━━━━━━━━",
     `📅 Hari: <b>${hariIndonesia}</b>`,
     "",
@@ -100,7 +99,6 @@ function buatPesanSiang(hari, namaPiket) {
     .join("\n");
 
   return [
-    "🪭<b>DANPIKET</b>",
     "🧹 <b>REMINDER PIKET KELAS</b>",
     "━━━━━━━━━━━━━━━━━━━━",
     `📅 Hari: <b>${hariIndonesia}</b>`,
