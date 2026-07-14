@@ -1,7 +1,7 @@
 const TUGAS_PIKET = [
-  "Menyapu lantai & membuang sampah",
-  "Merapikan kabel & Menyapu lantai",
-  "Merapikan meja, kursi taruna & mematikan AC/lampu",
+  "Menyapu lantai &amp; membuang sampah",
+  "Merapikan kabel &amp; Menyapu lantai",
+  "Merapikan meja, kursi taruna &amp; mematikan AC/lampu",
   "<code>Danpiket</code> — Lapor ke Ketua Kelas setelah selesai",
 ];
 
@@ -86,11 +86,11 @@ function buatPesanSiang(hari, namaPiket) {
 
   // Tugas terakhir dibuat seperti pesan siang pada screenshot.
   const tugasSiang = [
-    "Menyapu lantai & membuang sampah",
-    "Merapikan kabel & Menyapu lantai",
-    "Merapikan meja, kursi taruna & mematikan AC/lampu",
-    "Pastikan standar 100% terpenuhi sebelum lapor ke Ketua Kelas.",
-  ];
+  "Menyapu lantai &amp; membuang sampah",
+  "Merapikan kabel &amp; Menyapu lantai",
+  "Merapikan meja, kursi taruna &amp; mematikan AC/lampu",
+  "Pastikan standar 100% terpenuhi sebelum lapor ke Ketua Kelas.",
+];
 
   const daftarTugas = tugasSiang
     .map((tugas, index) => {
